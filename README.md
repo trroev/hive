@@ -1,4 +1,4 @@
-# Hive
+# Hive 🐝
 
 A personal orchestration crew for Claude Code. Your main session is the **Queen**:
 she holds the plan, decomposes a loose ask into tasks with declared file-ownership
