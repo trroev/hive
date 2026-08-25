@@ -16,6 +16,7 @@ design, distilled from the wayfinding effort that produced the plugin.
 | [0009](0009-project-profile.md) | The project profile holds facts and pointers; init detects-then-confirms |
 | [0010](0010-plugin-shape.md) | Plugin shape: skills are the Queen's verbs, agents are the bees |
 | [0011](0011-git-flow-branches.md) | Integration branches use git-flow names; commits follow Conventional Commits |
+| [0012](0012-fleet-durability.md) | Fleet durability: stay in-session; the detached fleet stays an unbuilt additive seam |
 
 New decisions get the next sequential number. Superseding or refining an earlier
 one: note it in a `Status:` line and cross-link (see 0011 → 0005). The glossary
