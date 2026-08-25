@@ -1,0 +1,23 @@
+{
+  "hiveProfileVersion": 1,
+  "packageManager": "pnpm",
+  "trunk": "main",
+  "gates": {
+    "lint": "pnpm lint",
+    "typecheck": "pnpm typecheck",
+    "test": "pnpm test",
+    "build": "pnpm build"
+  },
+  "codegen": ["pnpm generate:types"],
+  "sharedSurfaces": [
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "**/migrations/**",
+    "apps/*/src/payload-types.ts"
+  ],
+  "generated": ["apps/*/src/payload-types.ts"],
+  "protectedPaths": [".env*", "tooling/**"],
+  "conventions": ["CLAUDE.md"],
+  "maxConcurrentBuilders": 3
+}

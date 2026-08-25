@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/trroev/hive/reference/profile.schema.json",
+  "title": "Hive project profile",
+  "description": "Per-project cold-start context for the Hive plugin. Written by /hive:init, committed at .hive/profile.json, and projected field-by-field onto each bee at dispatch so the same flow runs in any repo. Holds facts a dispatch needs; deliberately omits secrets, the architecture map (its own file, .hive/architecture.md), run-state (.hive/runs/, gitignored), and per-role model defaults (agent frontmatter).",
+  "type": "object",
+  "required": ["hiveProfileVersion", "trunk", "gates"],
+  "additionalProperties": false,
+  "properties": {
+    "hiveProfileVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Profile schema version — the anti-rot / migration hook. A mismatch against the plugin's expected version prompts a re-init/migrate. Separate version line from the plugin's own semver."
+    },
+    "packageManager": {
+      "type": "string",
+      "description": "Detected package manager. Fronts the gate commands so a bee never guesses the runner.",
+      "examples": ["pnpm", "npm", "yarn", "bun"]
+    },
+    "trunk": {
+      "type": "string",
+      "description": "The mainline branch the Queen integrates toward (never pushes to). Detected from origin/HEAD, fallback main/master.",
+      "examples": ["main", "master"]
+    },
+    "gates": {
+      "type": "object",
+      "description": "name -> TOP-LEVEL command a bee runs to verify work. Orchestrator-agnostic: record `pnpm test`, not the turbo/nx pipeline underneath. A gate the repo lacks is OMITTED entirely (reported at run time, never invented). A gate whose command no longer resolves fails loud as a red gate — never silently skipped. Common keys are lint/typecheck/test/build, but any named gate is allowed (e.g. e2e).",
+      "additionalProperties": { "type": "string" },
+      "properties": {
+        "lint": { "type": "string" },
+        "typecheck": { "type": "string" },
+        "test": { "type": "string" },
+        "build": { "type": "string" }
+      }
+    },
+    "codegen": {
+      "type": "array",
+      "description": "Top-level commands that regenerate committed artifacts (e.g. generated types, import maps). MUST run before gates — a Builder that edits a codegen source but skips the regen produces a false green. Ordered; run in sequence.",
+      "items": { "type": "string" }
+    },
+    "sharedSurfaces": {
+      "type": "array",
+      "description": "Glob set of paths that collide across almost any decomposition — lockfiles, workspace/orchestrator config, migrations, barrel files, generated code. Any task touching one is auto-serialized (treated as overlapping with everything). Answers 'serialize me'. If this field is ABSENT, Hive falls back to the shipped default set in reference/shared-surfaces.default.json.",
+      "items": { "type": "string" }
+    },
+    "generated": {
+      "type": "array",
+      "description": "Glob set of paths that are edit-only-via-codegen — regenerate, never hand-edit. Distinct from sharedSurfaces (which answers 'serialize me'); this answers 'how you may change it'. Overlap between the two fields is expected and fine.",
+      "items": { "type": "string" }
+    },
+    "protectedPaths": {
+      "type": "array",
+      "description": "Glob set a Builder must never create, modify, or stage — secrets, machine-local files, tooling a worker has no business in. Intent, not a fact: `.env*` is the shipped default; the rest is asked, not detected.",
+      "items": { "type": "string" }
+    },
+    "conventions": {
+      "type": "array",
+      "description": "POINTERS to in-repo convention docs the bees should read (CLAUDE.md, AGENTS.md, docs/…). Never a restatement of the rules — the doc is the source of truth; the profile only names it.",
+      "items": { "type": "string" }
+    },
+    "maxConcurrentBuilders": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 3,
+      "description": "The concurrency cap — how many Builders run at once. A scheduling knob (the /hive:run flag overrides per run); read-only bees are not throttled by it but still count toward the harness's hard ceiling of 20 concurrent subagents."
+    },
+    "taskTimeoutMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional per-task budget. A dispatched task silent past this budget is presumed hung; the Queen marks it failed and escalates. Omit to rely on maxTurns alone."
+    },
+    "maxQaRounds": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 2,
+      "description": "The QA-loop round cap — how many same-Builder fix rounds run after the first Guard review before the Queen escalates. A trend-aware bound, not run-until-clean: a shrinking blocking-finding set earns one round past the cap; a static or growing set escalates before it. Omit to use the default of 2."
+    }
+  }
+}

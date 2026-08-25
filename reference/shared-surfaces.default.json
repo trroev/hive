@@ -1,0 +1,16 @@
+{
+  "//": "Fail-safe fallback for profile.sharedSurfaces. When a profile omits sharedSurfaces entirely, Hive treats this set as the shared-surface globs. init seeds a profile's sharedSurfaces from this set unioned with the repo's lockfile and any detected generated paths (see the init detection map). Package-manager-agnostic on purpose: the union keeps the lockfile that actually exists.",
+
+  "sharedSurfaces": [
+    "pnpm-lock.yaml",
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+    "bun.lockb",
+    "bun.lock",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "nx.json",
+    "**/migrations/**"
+  ]
+}

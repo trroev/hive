@@ -1,0 +1,14 @@
+{
+  "name": "hive",
+  "owner": {
+    "name": "Trevor Mathiak"
+  },
+  "description": "Trevor Mathiak's Hive plugin for Claude Code.",
+  "plugins": [
+    {
+      "name": "hive",
+      "source": ".",
+      "description": "A personal agent crew for Claude Code — the Queen (your main session) decomposes work into owned tasks and dispatches worker bees into isolated worktrees, sequencing the landings herself."
+    }
+  ]
+}
