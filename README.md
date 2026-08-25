@@ -7,9 +7,6 @@ autonomous QA loop, and sequences the landings herself — handing you a green b
 to push. The project-specific knowledge (gates, trunk, conventions, codegen) lives
 in a committed `.hive/` profile, so the same flow runs in any repo.
 
-Everything namespaces under `hive:`, so it coexists with other crews (e.g. `crew:`)
-collision-free — not a replacement.
-
 ## The roster
 
 | Bee | Job |
