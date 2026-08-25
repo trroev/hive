@@ -58,6 +58,12 @@
       "description": "POINTERS to in-repo convention docs the bees should read (CLAUDE.md, AGENTS.md, docs/…). Never a restatement of the rules — the doc is the source of truth; the profile only names it.",
       "items": { "type": "string" }
     },
+    "integrationBranchTemplate": {
+      "type": "string",
+      "default": "{type}/{slug}",
+      "description": "Template for the local integration branch the Queen lands a run onto (never pushed). `{type}` is the git-flow class the Queen infers from the ask (feature/fix/hotfix/chore); `{slug}` is the ask kebab-cased. Default `\"{type}/{slug}\"` yields names like `feature/contact-phone-field`. The runId keys `.hive/runs/`, so the branch need not carry it; set e.g. `\"hive/run-{runId}\"` to restore the timestamped scheme.",
+      "examples": ["{type}/{slug}", "hive/run-{runId}", "{slug}"]
+    },
     "maxConcurrentBuilders": {
       "type": "integer",
       "minimum": 1,

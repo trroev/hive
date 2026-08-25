@@ -60,7 +60,7 @@ Header, then the table, then one `Next:` line. Status glyphs: `✓ landed`,
 aligned and the whole thing one screen.
 
 ```
-Run  password-reset            hive/run-2026-08-25-1030-password-reset
+Run  password-reset            feature/password-reset
 Ask  Add a password reset flow (request + confirm + email).
      in-progress · started 10:30 · 17m elapsed · 1/3 landed
 

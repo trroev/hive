@@ -55,7 +55,7 @@ Developing Hive itself? Run a local checkout instead — see
 
 # 3. She scouts, then shows you a one-screen plan. Approve / amend / reject. (gate 1)
 # 4. Bees build in isolated worktrees; the Guard reviews; fixes route back — all AFK.
-# 5. She merges the green branches onto a local hive/run-<id> branch and hands it back. (gate 2)
+# 5. She merges the green branches onto a local <type>/<slug> branch and hands it back. (gate 2)
 
 # Peek any time, without disturbing the run:
 /hive:status
@@ -71,7 +71,7 @@ mid-flight is an **escalation** (a plan that needs rethinking), which is itself 
 - **Integration** (exit) — one confirmation on the finished, green batch.
 
 **The push is yours.** Nothing in Hive pushes. The Queen merges onto a *local*
-`hive/run-<id>` branch — never the trunk, never pushed — and hands it to you. The
+`<type>/<slug>` branch — never the trunk, never pushed — and hands it to you. The
 push / PR is the one irreversible act, and it is yours alone. (She also never resolves
 a merge conflict by hand — that re-opens the later Builder, rebased.)
 

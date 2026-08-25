@@ -25,8 +25,9 @@ state, not a committed artifact — the profile and architecture map are what ge
 committed, run-state is not.
 
 `<runId>` is `<UTC-date>-<HHMM>-<slug>`, e.g. `2026-08-25-1030-password-reset` —
-sortable, unique per invocation, and the stem of the integration branch
-(`hive/run-<runId>`).
+sortable, unique per invocation, and the key for `.hive/runs/`. The integration
+branch is named separately from `profile.integrationBranchTemplate` (git-flow
+default, e.g. `feature/password-reset`) and stored in `run.json.integrationBranch`.
 
 ## The plan / live-state split — no field in both
 
@@ -67,7 +68,7 @@ frozen record of what the human approved.
   "runId": "2026-08-25-1030-password-reset",
   "ask": "Add a password reset flow (request + confirm + email).",
   "status": "in-progress",              // in-progress | landed | halted
-  "integrationBranch": "hive/run-2026-08-25-1030-password-reset",
+  "integrationBranch": "feature/password-reset",
   "startedAt": "2026-08-25T10:30:04Z",  // UTC ISO-8601, Z-suffixed
   "profileStamp": "a1b9f30",            // .hive/profile.json version/SHA aligned against
 

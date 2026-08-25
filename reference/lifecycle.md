@@ -26,7 +26,7 @@ scout → align ⟨gate⟩ → dispatch → throttle → QA loop → integrate �
    for a fix round; Guard re-reviews. Bounded by a trend-aware round cap; it runs **AFK**
    between the two gates.
 6. **Integrate ⟨human gate⟩** — the Queen merges the green branches in dependency order
-   onto a local `hive/run-<id>` branch, re-running the gates after each merge, and closes
+   onto a local `<type>/<slug>` branch, re-running the gates after each merge, and closes
    with a one-screen outcome summary.
 7. **Terminal** — the run ends **landed** (all tasks merged green, handed to you) or
    **halted** (stopped at an escalation you declined to continue).
@@ -42,7 +42,7 @@ pulls you back in mid-loop, and it is itself a gate.
 ## The push is yours
 
 **Nothing in Hive pushes.** The Queen merges onto a *local* integration branch —
-never the trunk, never pushed — and hands you the green `hive/run-<id>` branch. The
+never the trunk, never pushed — and hands you the green `<type>/<slug>` branch. The
 push / PR is the one irreversible act, and it is **yours alone**, confirmed once on
 the finished batch. The Queen also **never resolves a merge conflict herself** — that
 re-opens the later Builder, rebased.

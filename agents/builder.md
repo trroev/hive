@@ -39,7 +39,10 @@ The Queen names your context at dispatch — read it yourself:
 4. **Leave the protected and generated paths alone.** Never stage
    `protectedPaths`. Touch `generated` files only through their codegen, never
    by hand.
-5. **Commit in focused logical units** with clear messages; record the shas.
+5. **Commit in focused logical units** using **Conventional Commits**
+   (`type(scope): subject` — `feat`/`fix`/`refactor`/`chore`/… , imperative,
+   lowercase, no trailing period; e.g. `feat(contact): add optional phone field`).
+   Record the shas.
 6. **Run the profile's gates** before you call it done; report each command and
    its pass/fail. A non-zero exit is `failed`, not done.
 7. **Codegen never fails silently.** If the task touches a codegen surface, run

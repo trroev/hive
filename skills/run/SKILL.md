@@ -19,7 +19,7 @@ run-state, and follow it field-for-field.
 > scout → decompose → align → dispatch → throttle → Guard review → same-Builder fix
 > rounds → **integration**. §§0–8 take the loose ask to dispatched, throttled bees; §9
 > is the QA loop that brings each task through to a green, ready-to-land pass; §10 is the
-> integration ritual that lands those green worktrees onto `hive/run-<id>` and closes the
+> integration ritual that lands those green worktrees onto `<type>/<slug>` and closes the
 > run in a terminal state with the outcome summary. Nothing here pushes — the human owns
 > the push / PR (§10).
 
@@ -140,7 +140,7 @@ A **topologically-ordered table**, one row per task, columns = the mandatory fie
 plus a run-plan line and the effective parallel width under the cap:
 
 ```
-Run  password-reset            (will become hive/run-<id> on approval)
+Run  password-reset            (will become feature/password-reset on approval)
 Ask  Add a password reset flow (request + confirm + email).
 
 #   Role     Goal                        Owns                        Deps    Gates            Runs
@@ -191,12 +191,19 @@ The decomposition is living, but a **shape change re-triggers alignment**. The t
 Only after approval, create the run and write the plan. Follow `run-state.md` exactly:
 
 - **runId** = `<UTC-date>-<HHMM>-<slug>` (e.g. `2026-08-25-1030-password-reset`) —
-  sortable, unique per invocation, the stem of the integration branch. Get the time
+  sortable, unique per invocation, the key for `.hive/runs/`. Get the time
   from the system; slug from the ask.
+- **integrationBranch** = fill `profile.integrationBranchTemplate` (default
+  `"{type}/{slug}"`). `{type}` is the git-flow class you infer from the ask —
+  `feature` for new capability, `fix`/`hotfix` for a defect, `chore` for
+  maintenance; `{slug}` is the ask kebab-cased. So `feature/contact-phone-field`,
+  `hotfix/payment-crash`. If that branch already exists, append `-2`, `-3`, … The
+  runId keys `.hive/runs/`; the branch no longer carries it, and `run.json`
+  records the link.
 - Create `${CLAUDE_PROJECT_DIR}/.hive/runs/<runId>/` with `tasks/` and `artifacts/`
   subdirs.
 - Write `run.json` with: `runId`, `ask` (verbatim), `status: "in-progress"`,
-  `integrationBranch: "hive/run-<runId>"`, `startedAt` (UTC ISO-8601, `Z`-suffixed),
+  `integrationBranch` (the git-flow name derived above), `startedAt` (UTC ISO-8601, `Z`-suffixed),
   `profileStamp` (the profile version/SHA you aligned against), and `decomposition`
   (the aligned DAG — `id`/`goal`/`role`/`deps` for all; `owns`/`acceptanceCriteria` for
   Builders; optional `runs`). **Plan fields live only here.**
@@ -441,9 +448,10 @@ Guard — carry no branch and never land).
 
 ### Open the integration branch
 
-Create the local integration branch `run.json.integrationBranch` (`hive/run-<runId>`)
-from the current **trunk** (`profile.trunk`) — a clean base, off the tip of trunk, **never
-trunk itself**. This is the branch you merge onto and, at the end, hand the human to push.
+Create the local integration branch `run.json.integrationBranch` (the git-flow name, e.g.
+`feature/contact-phone-field`) from the current **trunk** (`profile.trunk`) — a clean base,
+off the tip of trunk, **never trunk itself**. This is the branch you merge onto and, at the
+end, hand the human to push.
 It is created locally and **never pushed** by you.
 
 ### Merge order — the strict hierarchy
@@ -459,9 +467,14 @@ the align schedule, §4):
 3. **Ties → smallest / lowest-risk first** — to surface integration trouble early and
    cheap, while the branch is still simple to reason about.
 
-Merge each branch with `git merge` onto the integration branch. After each merge records
-cleanly, **capture the integration branch's SHA as the new last-green state** — the point
-you roll back to if the *next* merge reddens a gate.
+Land each branch onto the integration branch with a **fast-forward** (`git merge --ff-only`)
+whenever the history allows it — the Builder's commits are already Conventional Commits, so a
+fast-forward keeps that clean history with **no merge commit**. Only when a fast-forward is
+impossible (the branches diverged) do you make a real merge commit, and then its message is a
+**Conventional Commit** (`feat(scope): …` / `fix(scope): …` describing the landed change) —
+never a bare `merge(...)` type. After each land records cleanly, **capture the integration
+branch's SHA as the new last-green state** — the point you roll back to if the *next* land
+reddens a gate.
 
 ### Re-run the gates after every merge
 
@@ -518,7 +531,7 @@ conflicts:
 **One confirmation, at the end, on the whole batch.** Interior integration (merge → gate →
 merge → gate on the local branch) runs **AFK** — the human cannot act on an intermediate
 *local* merge anyway. When the batch is fully merged and green, present the **outcome
-summary** (below) and hand over the green `hive/run-<runId>` branch; the human reviews it
+summary** (below) and hand over the green integration branch; the human reviews it
 and performs the **one irreversible act — the push / PR**, which is theirs alone.
 Escalations (a re-align, an unreconcilable conflict) are the only mid-integration human
 entry — human at the exits, never inside the grind (§9).
@@ -549,7 +562,7 @@ Close with a **one-screen outcome summary**, the mirror of the §5 align table:
 Run  password-reset   →  LANDED
 Ask  Add a password reset flow (request + confirm + email).
 
-Your next action:  review + push  hive/run-2026-08-25-1030-password-reset   (the push is yours)
+Your next action:  review + push  feature/password-reset   (the push is yours)
 
 #   Task                     Verdict    Landed / why not
 t1  reset-token + migration  clean      landed
@@ -595,7 +608,7 @@ run-state — nothing here is stored as prose.
   field in both.
 - **Never exceed the cap.** No 21st-agent error — self-throttle via the ready-queue.
 - **Never push or open a PR.** Integration (§10) merges the green branches onto the local
-  `hive/run-<id>` branch and hands the human the push; nothing in Hive pushes. The Queen's
+  `<type>/<slug>` branch and hands the human the push; nothing in Hive pushes. The Queen's
   `git merge` is orchestration; she never resolves a conflict or edits code by hand.
 - **Gates re-run after every merge.** The integration branch is proven green as a
   *combined* tree, not just per-branch — a merge that reddens a prior-green gate rolls back
