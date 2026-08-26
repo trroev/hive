@@ -1,0 +1,15 @@
+{
+  "hiveProfileVersion": 1,
+  "packageManager": "npm",
+  "trunk": "main",
+  "gates": {
+    "lint": "true",
+    "test": "true"
+  },
+  "codegen": [],
+  "sharedSurfaces": ["package-lock.json", "**/migrations/**"],
+  "generated": [],
+  "protectedPaths": [".env*"],
+  "conventions": ["CLAUDE.md"],
+  "maxConcurrentBuilders": 3
+}
