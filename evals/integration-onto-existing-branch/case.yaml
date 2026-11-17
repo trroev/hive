@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: "Integrate (ticketed, existing branch): build onto it, keep its commits"
+context:
+  scaffold_script: "scaffold.sh"

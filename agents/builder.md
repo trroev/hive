@@ -25,8 +25,15 @@ The Queen names your context at dispatch — read it yourself:
 
 ## Operating rules
 
-1. **First action: install dependencies** with the profile's package manager —
-   you are in a fresh worktree with none, so gates and builds fail until you do.
+1. **First action: start from the integration base, then install dependencies.**
+   If the bundle names an integration base (a commit SHA — only when the run builds
+   onto an existing branch) and your fresh
+   worktree's HEAD is not it, move your worktree branch to it
+   (`git reset --hard <sha>` — the worktree is fresh, nothing is lost) so your
+   commits sit on top of the branch the Queen lands onto. Then install deps with
+   the profile's package manager — you are in a fresh worktree with none, so
+   gates and builds fail until you do. (On a QA-loop resume, skip the reset —
+   your WIP lives in this worktree.)
 2. **Build to the task's acceptance criteria**, inside your worktree. If reality
    contradicts the task, **stop and hand back** rather than improvising a
    different direction.

@@ -28,6 +28,9 @@ committed, run-state is not.
 sortable, unique per invocation, and the key for `.hive/runs/`. The integration
 branch is named separately from `profile.integrationBranchTemplate` (git-flow
 default, e.g. `feature/password-reset`) and stored in `run.json.integrationBranch`.
+A ticketed run (`--ticket <id>`) names it from `profile.ticketBranchTemplate`
+instead (e.g. `feature/PROJ-42-password-reset`) and, if that branch already
+exists, builds onto it; `run.json.integrationBase` records which.
 
 ## The plan / live-state split — no field in both
 
@@ -69,6 +72,12 @@ frozen record of what the human approved.
   "ask": "Add a password reset flow (request + confirm + email).",
   "status": "in-progress",              // in-progress | landed | halted
   "integrationBranch": "feature/password-reset",
+  "ticketId": "PROJ-42",                // optional — only when invoked with --ticket
+  "integrationBase": {                  // where the integration branch starts
+    "mode": "new",                      // new (branch from trunk) | existing (build onto it)
+    "ref": "main",                      // trunk, or the existing <branch> / <remote>/<branch>
+    "sha": "a1b9f30"                    // its tip at align; Builders start here
+  },
   "startedAt": "2026-08-25T10:30:04Z",  // UTC ISO-8601, Z-suffixed
   "profileStamp": "a1b9f30",            // .hive/profile.json version/SHA aligned against
 

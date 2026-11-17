@@ -26,7 +26,9 @@ scout → align ⟨gate⟩ → dispatch → throttle → QA loop → integrate �
    for a fix round; Guard re-reviews. Bounded by a trend-aware round cap; it runs **AFK**
    between the two gates.
 6. **Integrate ⟨human gate⟩** — the Queen merges the green branches in dependency order
-   onto a local `<type>/<slug>` branch, re-running the gates after each merge, and closes
+   onto a local `<type>/<slug>` branch (a ticketed run — `--ticket <id>` — names it from
+   `ticketBranchTemplate` and builds onto it if it already exists), re-running the gates
+   after each merge, and closes
    with a one-screen outcome summary.
 7. **Terminal** — the run ends **landed** (all tasks merged green, handed to you) or
    **halted** (stopped at an escalation you declined to continue).
