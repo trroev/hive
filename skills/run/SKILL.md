@@ -47,6 +47,14 @@ run-state, and follow it field-for-field.
   `--cap N`). If present it overrides `profile.maxConcurrentBuilders` **for this run
   only**; else use the profile value; else the default **3**. This is a scheduling
   knob — it changes the *schedule*, never what the human approves (§5).
+- **Ticket ID:** the invocation may carry `--ticket <id>` (e.g. `--ticket PROJ-42`) — a
+  ticket the integration branch must carry, making this a **ticketed run**. It switches
+  branch naming to `profile.ticketBranchTemplate`, and the branch is one you build onto if
+  it already exists (§6, §10). Record it verbatim as `run.json.ticketId`. Absent →
+  today's naming and today's branch-from-trunk behaviour, unchanged.
+- **Resolve the integration branch now, before align** — derive `integrationBranch` and
+  `integrationBase` by the rules in §6 so the align screen (§5) can show whether the run
+  creates a branch or builds onto an existing one. §6 persists what you resolved here.
 
 ## 2 · Scout the terrain
 
@@ -157,6 +165,10 @@ Approve / amend / reject.
 
 Rules for the render:
 
+- **The `Run` line names the integration branch and its base.** Unticketed or a new
+  ticket branch: `(will become <branch> on approval)`. An existing ticket branch: `(builds
+  onto existing <branch> @ <sha>, N commits ahead of trunk)` — the human approves building
+  onto it.
 - **Owns** shows the write-claim globs; read-only tasks show `—`.
 - **Gates** lists the profile's gate short-names the Builder will run (iterate
   `profile.gates` keys — do **not** assume lint/typecheck/test/build; a profile may name
@@ -200,10 +212,26 @@ Only after approval, create the run and write the plan. Follow `run-state.md` ex
   `hotfix/payment-crash`. If that branch already exists, append `-2`, `-3`, … The
   runId keys `.hive/runs/`; the branch no longer carries it, and `run.json`
   records the link.
+- **Ticketed run (`--ticket <id>`, §1)** — fill `profile.ticketBranchTemplate` instead
+  (default `"{type}/{ticketId}-{slug}"`), with `{ticketId}` the ID as given (case kept;
+  characters git forbids in a ref replaced with `-`). So `--ticket PROJ-42` →
+  `feature/PROJ-42-contact-phone-field`. The ticket names this branch, so **never suffix
+  it** — instead resolve whether it already exists:
+  - If the repo has a remote (the one trunk tracks, usually `origin`), `git fetch <remote>
+    <branch>` — a read, not a push; a branch missing on the remote is not an error. Then
+    look for the branch **locally first, then on the remote**.
+  - **Exists** → `integrationBase.mode: "existing"`, `integrationBase.ref` = where it was
+    found (`<branch>` or `<remote>/<branch>`), `integrationBase.sha` = its tip. If both
+    exist and the local branch is a strict ancestor of the remote one, use the remote tip
+    (its PR is ahead); if they have **diverged**, escalate — never pick one.
+  - **No ticket branch yet → branch from trunk**: `integrationBase.mode: "new"`, `ref` =
+    `profile.trunk`, `sha` = trunk's tip — exactly today's behaviour.
+  Unticketed runs record `integrationBase` too (`mode: "new"` off trunk).
 - Create `${CLAUDE_PROJECT_DIR}/.hive/runs/<runId>/` with `tasks/` and `artifacts/`
   subdirs.
 - Write `run.json` with: `runId`, `ask` (verbatim), `status: "in-progress"`,
-  `integrationBranch` (the git-flow name derived above), `startedAt` (UTC ISO-8601, `Z`-suffixed),
+  `integrationBranch` (the git-flow name derived above), `ticketId` (only on a ticketed
+  run), `integrationBase` (`mode`/`ref`/`sha`, derived above), `startedAt` (UTC ISO-8601, `Z`-suffixed),
   `profileStamp` (the profile version/SHA you aligned against), and `decomposition`
   (the aligned DAG — `id`/`goal`/`role`/`deps` for all; `owns`/`acceptanceCriteria` for
   Builders; optional `runs`). **Plan fields live only here.**
@@ -262,7 +290,10 @@ notifications on a later turn. Only the Queen dispatches (bees have `Agent` stri
   **`isolation: "worktree"`** (lands in `.claude/worktrees/`, shares the repo `.git` so
   commits are visible to you immediately). Point it at its bundle (§6). It inherits your
   session model. On dispatch: set the task `dispatched`, `dispatchedAt` now, record the
-  worktree/branch in `location` once known.
+  worktree/branch in `location` once known. When `integrationBase.mode` is `"existing"`,
+  name the run's **integration base** (`run.json.integrationBase.sha`) in the bundle so the
+  Builder starts its worktree there — it sees the existing branch's commits and lands by
+  fast-forward. On a `"new"` base, name nothing: Builders start as they always have.
 - **Read-only bees** (Scout/Forager/Guard) — `Agent`, the matching `subagent_type`,
   **no worktree** (they never write). Scout/Builder/Guard inherit the session model;
   **Forager pins `sonnet`** (its frontmatter) — you don't override that.
@@ -448,11 +479,35 @@ Guard — carry no branch and never land).
 
 ### Open the integration branch
 
-Create the local integration branch `run.json.integrationBranch` (the git-flow name, e.g.
-`feature/contact-phone-field`) from the current **trunk** (`profile.trunk`) — a clean base,
-off the tip of trunk, **never trunk itself**. This is the branch you merge onto and, at the
-end, hand the human to push.
-It is created locally and **never pushed** by you.
+The integration branch `run.json.integrationBranch` is the branch you merge onto and, at
+the end, hand the human to push. It is local and **never pushed** by you — and
+**never trunk itself**. How you open it depends on `run.json.integrationBase.mode` (§6):
+
+- **`mode: "new"`** — every unticketed run, and a ticketed run whose branch didn't exist:
+  create the branch (e.g. `feature/contact-phone-field`) from the current tip of **trunk**
+  (`profile.trunk`) — today's behaviour.
+- **`mode: "existing"`** — a ticketed run whose branch already exists (e.g. the human's
+  tooling opened a draft PR on it before the build): **build onto the existing branch**
+  instead of creating one.
+  1. If the repo has a remote, re-fetch it (`git fetch <remote> <branch>`; a branch
+     missing on the remote just means it is local-only — not an error).
+  2. Check it out — `git switch <branch>`, or, if it only exists on the remote,
+     `git switch --no-track -c <branch> <remote>/<branch>` (no upstream config — the human
+     sets it when they push). If the local copy is behind the remote, bring it up with
+     `git merge --ff-only <remote>/<branch>`. If the checkout fails, stop — never land
+     while still on trunk.
+  3. If its tip has moved since align and descends from `integrationBase.sha`, take the new
+     tip (more commits were added; lands onto it may then need a Conventional-Commit merge
+     commit instead of a fast-forward). If it was rewritten (not a descendant), **escalate**.
+  4. **Run the gates on the opening tip** before the first land. Red there is the
+     existing branch's own code, not a merge you can roll back — escalate.
+
+  Its existing commits stay exactly as they are: the **opening tip** is your first
+  last-green SHA, so every rollback (below) lands at or above it — the branch is
+  **never below its opening tip**, never reset, rebased, or force-moved past the work
+  already on it. Merge order, landing, conflict handling, and **gates re-run after every
+  merge onto the existing branch too** are otherwise identical. When done, hand the same
+  branch back — the human pushes it (onto its open PR); you never do.
 
 ### Merge order — the strict hierarchy
 
@@ -467,7 +522,8 @@ the align schedule, §4):
 3. **Ties → smallest / lowest-risk first** — to surface integration trouble early and
    cheap, while the branch is still simple to reason about.
 
-Land each branch onto the integration branch with a **fast-forward** (`git merge --ff-only`)
+Before every land, **confirm you are on the integration branch** (`git branch
+--show-current`) — a land onto trunk is never right. Land each branch onto the integration branch with a **fast-forward** (`git merge --ff-only`)
 whenever the history allows it — the Builder's commits are already Conventional Commits, so a
 fast-forward keeps that clean history with **no merge commit**. Only when a fast-forward is
 impossible (the branches diverged) do you make a real merge commit, and then its message is a
@@ -497,7 +553,9 @@ integration branch is **always green**:
 
 1. **Roll the integration branch back to the last-green SHA** (`git reset --hard <last-green>`
    on the integration branch) — undo the reddening merge; the branch returns to the
-   proven-green state before it.
+   proven-green state before it. On an existing branch the last-green SHA is never older
+   than the opening tip (proven green before the first land), so a rollback only ever
+   undoes this run's own lands.
 2. **Re-open the later task through the QA loop (§9)** — set its task back to `in-qa`
    (§9 is written to be **re-enterable**), and dispatch its Builder **rebased onto the
    integration-branch-so-far** (`SendMessage` the same Builder if still addressable, else
@@ -608,7 +666,8 @@ run-state — nothing here is stored as prose.
   field in both.
 - **Never exceed the cap.** No 21st-agent error — self-throttle via the ready-queue.
 - **Never push or open a PR.** Integration (§10) merges the green branches onto the local
-  `<type>/<slug>` branch and hands the human the push; nothing in Hive pushes. The Queen's
+  `<type>/<slug>` branch (or a ticketed run's existing branch) and hands the human the
+  push; nothing in Hive pushes — not even onto an open PR's branch. The Queen's
   `git merge` is orchestration; she never resolves a conflict or edits code by hand.
 - **Gates re-run after every merge.** The integration branch is proven green as a
   *combined* tree, not just per-branch — a merge that reddens a prior-green gate rolls back

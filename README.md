@@ -72,6 +72,13 @@ mid-flight is an **escalation** (a plan that needs rethinking), which is itself 
 push / PR is the one irreversible act, and it is yours alone. (She also never resolves
 a merge conflict by hand — that re-opens the later Builder, rebased.)
 
+**Landing on a ticket's branch.** Pass `--ticket <id>` (e.g. `/hive:run --ticket PROJ-42
+add a phone field`) and the branch is named from `profile.ticketBranchTemplate` (default
+`{type}/{ticketId}-{slug}` → `feature/PROJ-42-phone-field`). If that branch already
+exists — locally or on the remote, say because a draft PR is already open on it — the
+Queen builds onto it, leaving its commits intact, instead of branching from trunk. You
+still push it.
+
 ## Dogfooding — run Hive on Hive
 
 To run a local checkout while developing the plugin:
