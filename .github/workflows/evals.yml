@@ -4,6 +4,7 @@ name: evals
 #   1. invariants  — deterministic prose-regression grep, every push/PR. Its job
 #                    name is the main ruleset's required check — don't rename it.
 #   2. plugin-eval — the `claude plugin eval` behavioral suite (costs tokens).
+#                    Manual only: Actions → evals → Run workflow, on main.
 
 on:
   push:
@@ -33,15 +34,12 @@ jobs:
 
   plugin-eval:
     name: claude plugin eval suite
-    # Only reviewed code on main gets the API key: never pull_request, and a manual
-    # dispatch only from main (not an arbitrary unmerged branch).
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # Manual only, and only from main: reviewed code is the only code that ever runs
+    # with the API key, and nothing spends tokens unless you ask for it.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # Don't block on the behavioral suite yet — LLM graders are inherently noisy.
-    # Flip this off once it has a stable track record as a gate.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,9 +55,8 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-            echo "ANTHROPIC_API_KEY not set — skipping the behavioral eval suite."
-            echo "(The invariant check is the active gate.)"
-            exit 0
+            echo "::error::ANTHROPIC_API_KEY is not set — add it as a repo secret to run the eval suite."
+            exit 1
           fi
           claude plugin eval . \
             --trust-plugin \
