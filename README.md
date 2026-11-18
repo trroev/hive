@@ -95,6 +95,26 @@ installed plugin (crew, trroev-skills, …) — those live in the plugin cache i
 > acceptance criteria and conventions only. Point Hive at a repo with real gates to
 > exercise the full loop.
 
+## Testing — self-testing a plugin made of prose
+
+Hive's behavior lives in prose (skills + agents), so its regression harness guards
+the prose. Two layers, both wired into CI ([`.github/workflows/evals.yml`](.github/workflows/evals.yml),
+[ADR-0013](docs/adr/0013-eval-harness.md)):
+
+```bash
+# 1. Static invariant check — deterministic, zero deps, runs today.
+#    Fails (exit 1) naming the exact rule if a load-bearing lifecycle invariant
+#    is deleted or reworded past recognition.
+bash scripts/check-invariants.sh
+
+# 2. Behavioral suite — `claude plugin eval`, one case per lifecycle phase
+#    (decompose → dispatch → QA → integrate). Costs tokens; see evals/README.md.
+claude plugin eval . --scaffold --ablation with-without --no-publish
+```
+
+Both cover the same four phases. See [`evals/README.md`](evals/README.md) for the
+case-by-case map and how to demonstrate the harness catching a deliberate regression.
+
 ## Reference
 
 Agent-facing durable docs — what the skills and bees point at:
@@ -116,6 +136,9 @@ Agent-facing durable docs — what the skills and bees point at:
 skills/{run,status,init,resync}/  # Queen verbs — human-invoked (/hive:*)
 agents/{scout,forager,builder,guard}.md  # the bees — Queen-invoked
 reference/                        # agent-facing durable docs (schema + prose)
+scripts/check-invariants.sh       # deterministic prose-regression guard (self-test)
+evals/                            # `claude plugin eval` behavioral suite (self-test)
+.github/workflows/evals.yml       # CI: invariant check + eval suite
 .hive/                            # committed per-project profile + architecture map (per repo)
 ```
 

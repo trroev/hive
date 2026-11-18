@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: "Dispatch: align checkpoint gates the first Builder"
+context:
+  scaffold_script: "scaffold.sh"

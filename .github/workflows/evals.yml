@@ -1,0 +1,64 @@
+name: evals
+
+# Hive's self-test harness (issue #5), two layers:
+#   1. invariants  — deterministic grep for load-bearing lifecycle rules. Runs on
+#                    every push/PR, no secrets, and gates the branch.
+#   2. plugin-eval — the `claude plugin eval` behavioral suite. Runs only when an
+#                    API key is configured (it costs tokens) and doesn't block the
+#                    branch yet; it becomes a real gate once it has a stable record.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  invariants:
+    name: invariant check (prose regression guard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check lifecycle invariants
+        run: bash scripts/check-invariants.sh
+
+  plugin-eval:
+    name: claude plugin eval suite
+    runs-on: ubuntu-latest
+    # Don't block on the behavioral suite yet — LLM graders are inherently noisy.
+    # Flip this off once it has a stable track record as a gate.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run eval suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "ANTHROPIC_API_KEY not set — skipping the behavioral eval suite."
+            echo "(The invariant check above is the active gate.)"
+            exit 0
+          fi
+          claude plugin eval . \
+            --trust-plugin \
+            --scaffold \
+            --allow-tools Bash Write Edit \
+            --ablation with-without \
+            --no-publish \
+            --json evals/results/ci.json \
+            --max-cost-usd 15 \
+            --threshold 0.8
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results/
+          if-no-files-found: ignore

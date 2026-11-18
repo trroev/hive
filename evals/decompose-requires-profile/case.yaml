@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: "Decompose: unprimed repo is refused before any dispatch"
+context:
+  scaffold_script: "scaffold.sh"
