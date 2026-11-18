@@ -23,6 +23,9 @@ design, distilled from the wayfinding effort that produced the plugin.
 | [0016](0016-pre-approved-runs.md) | Pre-approved runs: an approved brief replaces both human gates; escalations end the run |
 
 New decisions get the next sequential number. Superseding or refining an earlier
-one: note it in a `Status:` line and cross-link (see 0011 → 0005). The glossary
+one: note it in a `Status:` line and cross-link (see 0011 → 0005). Correcting or
+amending an accepted ADR without a new decision: append a dated
+`**Update (YYYY-MM-DD):**` paragraph and leave the original text intact (see 0013,
+0015). The glossary
 these draw on is the repo-root `CONTEXT.md`; the how-to detail lives in
 `reference/`.

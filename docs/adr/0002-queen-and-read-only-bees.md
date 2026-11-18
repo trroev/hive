@@ -18,8 +18,8 @@ per-domain agent files (expertise is layered context instead); hardcoding a
 strong model per bee (they ride the session model — see ADR-0009's profile
 overrides for the escape hatch).
 
-**Update (2026-11-18):** the profile override referenced above was cut in ADR-0009
-(a per-role model/effort field was rejected as speculative), so model and effort
-stay agent-frontmatter defaults only — there is no per-project escape hatch.
+**Update (2026-11-18):** the profile override referenced above never shipped —
+[ADR-0009](0009-project-profile.md) rejected it. See `reference/roles.md` for how
+model and effort are set.
 
 See `reference/roles.md`.
