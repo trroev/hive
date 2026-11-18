@@ -11,7 +11,7 @@ It is one of **two layers** (see [ADR-0013](../docs/adr/0013-eval-harness.md)):
 | Layer | What | Runs |
 | --- | --- | --- |
 | `scripts/check-invariants.sh` | Deterministic grep for load-bearing rules | **Today**, zero deps/cost |
-| `evals/` (this dir) | LLM-behavioral cases against the real skills/agents | On demand locally; in CI on pushes to `main` and manual dispatch from `main` only — never on PRs (costs tokens, needs the API key) |
+| `evals/` (this dir) | LLM-behavioral cases against the real skills/agents | On demand: locally before merging changes to `skills/` or `agents/`, or in CI via a manual run on `main` (costs tokens; CI needs an `ANTHROPIC_API_KEY` secret) |
 
 The static check is the fast guard that runs on every PR; this suite is the richer
 behavioral net that proves the model still *follows* the rules. Together they cover the same four

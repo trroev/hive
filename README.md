@@ -145,7 +145,7 @@ agents/{scout,forager,builder,guard}.md  # the bees — Queen-invoked
 reference/                        # agent-facing durable docs (schema + prose)
 scripts/check-invariants.sh       # deterministic prose-regression guard (self-test)
 evals/                            # `claude plugin eval` behavioral suite (self-test)
-.github/workflows/evals.yml       # CI: invariant check (every PR) + eval suite (main/manual)
+.github/workflows/evals.yml       # CI: invariant check (every PR) + eval suite (manual, main)
 .hive/                            # committed per-project profile + architecture map (per repo)
 ```
 

@@ -36,3 +36,9 @@ protection (rejected — rulesets are the current mechanism and also cover tags)
 
 **Rejected:** no bypass at all (a broken required check would lock `main` with no
 recovery short of deleting the ruleset).
+
+**Update (2026-11-18):** the `plugin eval` job is now **manual-only** (`workflow_dispatch`
+from `main`) and no longer runs on push. As a non-blocking post-merge signal it cost
+~$5–10 per merge for a sole maintainer who can run the suite locally *before* merging;
+without a key it also reported a misleading green. It now fails loudly when the key is
+missing, and drops `continue-on-error` — a run you asked for should show its result.
