@@ -78,9 +78,9 @@ definitions, reference contracts, ADRs — guarded by a deterministic grep scrip
   strip Edit/Write/NotebookEdit/Agent; forager also strips Bash and pins
   `model: sonnet`.
 - Builder's integration-base wording is invariant-pinned.
-- `reference/roles.md` restates the frontmatter — keep it in sync (known drift:
-  roles.md claims model/effort are profile-overridable; the schema has no such
-  field). `handback.md` defines the envelope every agent body emits.
+- `reference/roles.md` restates the frontmatter — keep it in sync. Model/effort
+  are frontmatter-only; the profile has no override (ADR-0009). `handback.md`
+  defines the envelope every agent body emits.
 
 ## doctrine
 

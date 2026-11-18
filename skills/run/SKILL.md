@@ -219,7 +219,7 @@ Rules for the render:
   any gate, e.g. `e2e`, or omit some).
 - **Runs / run-plan** states the schedule: which tasks are parallel, which are
   `after <id>`, and every shared-surface serialization **with its reason**.
-- **Effective parallel width under the cap** (issue 12): show eligible-parallel vs the
+- **Effective parallel width under the cap**: show eligible-parallel vs the
   cap and how many queue — e.g. `5 eligible parallel, cap 3 → 2 queued`. Hitting the cap
   does **not** change what the human approves — same decomposition, different schedule.
 - Fold in the Scout's **hard questions** here — resolve them with the human as part of

@@ -102,11 +102,10 @@ After editing a skill or agent, hot-reload without restarting the session:
 The local `--plugin-dir` install namespaces under `hive:` and does not touch any other
 installed plugin (crew, trroev-skills, …) — those live in the plugin cache independently.
 
-> Note: this repo is a prose/plugin repo with no JS toolchain, so `/hive:init` here
-> detects `trunk: main` and **no gates** (there is no `package.json`). A run in *this*
-> repo therefore has no mechanical gates for the Guard to run — it reviews against
-> acceptance criteria and conventions only. Point Hive at a repo with real gates to
-> exercise the full loop.
+> Note: this repo is a prose/plugin repo with no JS toolchain, so `/hive:init`'s
+> detection finds no `package.json` gates here. The committed `.hive/profile.json`
+> records one gate instead — `invariants: bash scripts/check-invariants.sh` — which
+> Builders and the Guard run on every task.
 
 ## Testing — self-testing a plugin made of prose
 

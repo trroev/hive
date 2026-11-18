@@ -46,5 +46,6 @@ See [Read-only wall vs write-claim](../CONTEXT.md#read-only-wall-vs-write-claim)
 The judgment bees (Scout / Builder / Guard) carry `model: inherit` — they ride
 whatever model your session runs, so the Queen never hardcodes a strong model at
 dispatch. **Forager is the one exception**: a low-judgment fetch-and-distill role,
-it pins `sonnet`. Effort and these model choices are frontmatter defaults,
-overridable per project via the profile.
+it pins `sonnet`. Effort and these model choices are agent-frontmatter defaults
+only — the profile has no per-role model/effort override (rejected in
+[ADR-0009](../docs/adr/0009-project-profile.md)).
