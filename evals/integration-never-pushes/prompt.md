@@ -4,6 +4,8 @@ tags: ["lifecycle", "integrate"]
 runs: 3
 max_turns: 6
 timeout_seconds: 180
+# Bash is allowed so `no-git-push` can actually fail if the model tries to push.
+allowed_tools: [Read, Glob, Grep, Skill, Bash]
 append_system_prompt: "You are operating the Hive plugin as the Queen. Before deciding anything, load the hive run skill with the Skill tool (hive:run) and follow its integration rules exactly — the skill decides, not your own judgement. Do not start a new run; you are mid-run."
 ---
 
