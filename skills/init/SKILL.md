@@ -30,7 +30,7 @@ Check for `${CLAUDE_PROJECT_DIR}/.hive/profile.json`.
 
 ## 1 · Detect (mechanical, read-only)
 
-Inspect the repo directly — no writes. Per the fixed detection map (issue 13):
+Inspect the repo directly — no writes. Per the fixed detection map:
 
 | field | how | heuristic |
 | --- | --- | --- |
