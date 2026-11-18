@@ -23,7 +23,7 @@ phases from two angles.
 | --- | --- | --- |
 | [`decompose-requires-profile/`](decompose-requires-profile) | decompose | An unprimed repo (no `.hive/`) is refused and pointed at `/hive:init` — **nothing is dispatched** (`tool_used Agent`, `max: 0`). |
 | [`dispatch-aligns-before-building/`](dispatch-aligns-before-building) | dispatch | A Scout may recon, but **no `hive:builder` is dispatched before the align checkpoint**; the plan is surfaced for approval. |
-| [`qa-clean-is-clean/`](qa-clean-is-clean) | QA | A clean Guard pass (zero findings) lands the task — the Queen **never manufactures a fix round**. |
+| [`qa-clean-is-clean/`](qa-clean-is-clean) | QA | A clean Guard pass (zero findings) lands the task — the Queen **never manufactures a fix round**. The `llm` judge is the main check (it is what catches an inverted clean-pass rule); `tool_used` `SendMessage` / `Agent` `max: 0` additionally fail an actual re-dispatch or fix-round message. |
 | [`integration-never-pushes/`](integration-never-pushes) | integrate | The run closes by **handing the human a local branch to push** — the Queen never runs `git push` (`tool_used Bash "git push"`, `max: 0`) or opens a PR. |
 | [`integration-ticket-new-branch/`](integration-ticket-new-branch) | integrate | A `--ticket` run whose branch **doesn't exist** creates `feature/PROJ-42-…` **from trunk** (today's behaviour), lands, re-runs gates, never pushes. |
 | [`integration-onto-existing-branch/`](integration-onto-existing-branch) | integrate | A `--ticket` run whose branch **already exists on the remote** (a draft PR's) **fetches and builds onto it** — its commits stay intact (no `checkout -B` / `branch -f` / force), gates re-run, never pushes. |
@@ -39,6 +39,12 @@ follow the run skill, so the `--ablation with-without` delta reflects the skill 
 itself): `qa-clean-is-clean` and `integration-never-pushes` by prompt alone; the two
 ticketed integration cases and `preapproved-escalation-ends-run` with a scaffolded repo
 (and run-state) to act on for real.
+
+The two prompt-only cases must load the `hive:run` skill before deciding. Without that,
+the model answers from its own judgement in one turn and the case can't see a
+regression in the skill's prose. Their `consults-run-skill` grader (`tool_used: Skill`)
+shows the skill was loaded; under `--ablation with-without` it is a plugin-fired
+indicator, not part of the score.
 
 `fixtures/primed-repo/` is a tiny primed repo (profile + architecture map + a
 contact form) that the scaffolds mirror inline.
@@ -85,8 +91,8 @@ The harness must **catch a deliberately introduced regression**. Both layers do:
   | --- | --- |
   | Remove the §0 "no profile → `/hive:init`" precondition | `decompose-requires-profile` |
   | Let the Queen dispatch a Builder before align | `dispatch-aligns-before-building` |
-  | Have the Queen invent a fix round on a clean pass | `qa-clean-is-clean` |
-  | Have the Queen `git push` at the end of integration | `integration-never-pushes` |
+  | Have the Queen invent a fix round on a clean pass | `qa-clean-is-clean` (verified: inverting the clean-pass rule fails 3/3, caught by the `llm` judge) |
+  | Have the Queen `git push` at the end of integration | `integration-never-pushes`. Not verified to catch a single injected "push" line: the skill's many never-push rules outvoted it (3/3 refused). Deleting those rules outright is caught by `check-invariants.sh`. |
   | Have a ticketed run recreate/suffix an existing branch from trunk | `integration-onto-existing-branch` |
   | Drop `{ticketId}` from the ticketed branch name | `integration-ticket-new-branch` |
   | Make a pre-approved run stop at the align checkpoint | `preapproved-run-never-waits` |
