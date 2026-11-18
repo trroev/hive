@@ -1,6 +1,6 @@
 # Integration branches use git-flow names; commits follow Conventional Commits
 
-Status: refines ADR-0005 (integration).
+Status: refines ADR-0005 (integration). Extended by ADR-0014 (ticket-aware branches).
 
 Integration branches derive from a configurable `profile.integrationBranchTemplate`
 (default `{type}/{slug}`, where `{type}` — feature/fix/hotfix/chore — is inferred

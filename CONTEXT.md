@@ -152,13 +152,23 @@ one-screen outcome summary, the mirror of the align checkpoint.
 
 How the Queen lands green worktrees. She merges each Builder branch, in
 **dependency order** (shared-surface/foundational first, then smallest/lowest-
-risk), into a **dedicated local integration branch** (`hive/run-<id>`) — never
-the trunk, never pushed. Gates re-run after each merge; a merge that breaks a
+risk), into a **dedicated local integration branch** — never the trunk, never
+pushed. It starts from the [integration base](#ticketed-run). Gates re-run after
+each merge; a merge that breaks a
 previously-green gate is rolled back and the later task re-opened through the
 [QA loop](#qa-loop). The Queen executes the merges (orchestration, not
 authoring) but **never resolves a code conflict herself** — that re-opens the
 later Builder, rebased. **Nothing in Hive pushes**: the push / PR is the human's
 alone, the one irreversible act, confirmed once on the finished batch.
+
+## Ticketed run
+
+A [run](#run) invoked with a ticket ID (`--ticket <id>`), whose integration
+branch carries that ID. Its **integration base** — the commit the integration
+branch starts from — is trunk's tip, unless the ticket's branch already exists
+(e.g. a draft PR opened before the build); then the run **builds onto** that
+branch, and its tip at that moment is the **opening tip**, below which the run
+never moves the branch. An unticketed run's base is always trunk.
 
 ## Run state
 

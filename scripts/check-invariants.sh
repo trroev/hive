@@ -55,6 +55,7 @@ BUILDER="agents/builder.md"
 SCOUT="agents/scout.md"
 GUARD="agents/guard.md"
 FORAGER="agents/forager.md"
+SCHEMA="reference/profile.schema.json"
 
 echo "Hive invariant check — the lifecycle rules that must not regress"
 echo
@@ -114,6 +115,20 @@ assert integrate "$RUN" "fast-forward landings keep clean history" \
   '--ff-only'
 assert integrate "$RUN" "the Queen never resolves a conflict herself" \
   'never resolve[s]? a (code )?conflict' E
+assert integrate "$RUN" "a caller-supplied ticket ID names the integration branch" \
+  '{ticketId}'
+assert integrate "$SCHEMA" "the profile carries a ticket-aware branch template" \
+  '"ticketBranchTemplate"'
+assert integrate "$RUN" "an existing target branch is built onto, not recreated from trunk" \
+  'build onto the existing branch'
+assert integrate "$RUN" "an existing branch's commits are never rolled back or rewritten" \
+  'never below its opening tip'
+assert integrate "$RUN" "a missing target branch still branches from trunk (today's behaviour)" \
+  'No ticket branch yet → branch from trunk'
+assert integrate "$RUN" "an existing branch's opening tip is proven green before the first land" \
+  'Run the gates on the opening tip'
+assert integrate "$BUILDER" "Builders start from the run's integration base" \
+  'integration base'
 
 # ── Roll-up ──────────────────────────────────────────────────────────────────
 echo

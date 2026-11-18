@@ -17,6 +17,8 @@ is orchestration, not code authoring, so the Queen may do that.
 **Rejected:** merging straight to trunk; the Queen resolving code conflicts
 herself (she never writes code); Hive pushing or opening PRs.
 
-**Note:** the integration branch *naming* was later revised — see ADR-0011.
+**Note:** the integration branch *naming* was later revised — see ADR-0011; a
+ticketed run may build onto an existing branch instead of branching from trunk —
+see ADR-0014.
 
 See `reference/lifecycle.md`.

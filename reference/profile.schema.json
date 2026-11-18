@@ -64,6 +64,12 @@
       "description": "Template for the local integration branch the Queen lands a run onto (never pushed). `{type}` is the git-flow class the Queen infers from the ask (feature/fix/hotfix/chore); `{slug}` is the ask kebab-cased. Default `\"{type}/{slug}\"` yields names like `feature/contact-phone-field`. The runId keys `.hive/runs/`, so the branch need not carry it; set e.g. `\"hive/run-{runId}\"` to restore the timestamped scheme.",
       "examples": ["{type}/{slug}", "hive/run-{runId}", "{slug}"]
     },
+    "ticketBranchTemplate": {
+      "type": "string",
+      "default": "{type}/{ticketId}-{slug}",
+      "description": "Template used INSTEAD of integrationBranchTemplate when a ticket ID is supplied for the run (`--ticket <id>`). Same `{type}`/`{slug}` placeholders plus `{ticketId}` — the supplied ID, kept as given (case preserved; only characters git forbids in a ref are replaced with `-`). Default `\"{type}/{ticketId}-{slug}\"` yields e.g. `feature/PROJ-42-contact-phone-field`. A ticketed branch is built onto if it already exists (locally or on the remote — e.g. a draft PR is already open on it) instead of being branched from trunk. Hive still never pushes it.",
+      "examples": ["{type}/{ticketId}-{slug}", "{ticketId}", "{type}/{ticketId}"]
+    },
     "maxConcurrentBuilders": {
       "type": "integer",
       "minimum": 1,

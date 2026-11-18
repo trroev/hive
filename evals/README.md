@@ -17,7 +17,7 @@ The static check is the fast guard that runs on every PR; this suite is the rich
 behavioral net that proves the model still *follows* the rules. Together they cover the same four
 phases from two angles.
 
-## The cases — one per lifecycle phase
+## The cases — by lifecycle phase
 
 | Case | Phase | Pins the invariant |
 | --- | --- | --- |
@@ -25,11 +25,15 @@ phases from two angles.
 | [`dispatch-aligns-before-building/`](dispatch-aligns-before-building) | dispatch | A Scout may recon, but **no `hive:builder` is dispatched before the align checkpoint**; the plan is surfaced for approval. |
 | [`qa-clean-is-clean/`](qa-clean-is-clean) | QA | A clean Guard pass (zero findings) lands the task — the Queen **never manufactures a fix round**. |
 | [`integration-never-pushes/`](integration-never-pushes) | integrate | The run closes by **handing the human a local branch to push** — the Queen never runs `git push` (`tool_used Bash "git push"`, `max: 0`) or opens a PR. |
+| [`integration-ticket-new-branch/`](integration-ticket-new-branch) | integrate | A `--ticket` run whose branch **doesn't exist** creates `feature/PROJ-42-…` **from trunk** (today's behaviour), lands, re-runs gates, never pushes. |
+| [`integration-onto-existing-branch/`](integration-onto-existing-branch) | integrate | A `--ticket` run whose branch **already exists on the remote** (a draft PR's) **fetches and builds onto it** — its commits stay intact (no `checkout -B` / `branch -f` / force), gates re-run, never pushes. |
 
 Graders lean on deterministic checks (`tool_used`, `regex`) first and use an `llm`
-judge only for the semantic call. The first two cases drive `/hive:run` against a
-scaffolded repo; the last two put the model in the Queen's seat at a mid-run
-decision point (with `append_system_prompt` telling it to follow the run skill),
+judge only for the semantic call. The decompose and dispatch cases drive `/hive:run`
+against a scaffolded repo; `qa-clean-is-clean` and `integration-never-pushes` put the
+model in the Queen's seat at a mid-run decision point; the two ticketed integration
+cases put it in the Queen's seat **and** give it a scaffolded repo to integrate for
+real with git (with `append_system_prompt` telling it to follow the run skill),
 so the `--ablation with-without` delta reflects the skill prose itself.
 
 `fixtures/primed-repo/` is a tiny primed repo (profile + architecture map + a
@@ -79,6 +83,8 @@ The harness must **catch a deliberately introduced regression**. Both layers do:
   | Let the Queen dispatch a Builder before align | `dispatch-aligns-before-building` |
   | Have the Queen invent a fix round on a clean pass | `qa-clean-is-clean` |
   | Have the Queen `git push` at the end of integration | `integration-never-pushes` |
+  | Have a ticketed run recreate/suffix an existing branch from trunk | `integration-onto-existing-branch` |
+  | Drop `{ticketId}` from the ticketed branch name | `integration-ticket-new-branch` |
 
 ## Caveats
 
