@@ -16,6 +16,8 @@ back. Nothing a bee does reaches disk except through her.
 ```
 .hive/runs/<runId>/
   run.json           the plan   — the aligned decomposition, frozen at align
+  brief.md           pre-approved runs only — the caller's approved brief, verbatim
+  artifacts/align.md pre-approved runs only — the align table the brief approved
   tasks/<id>.json    live state — one file per task, rewritten as it moves
   artifacts/<id>-*.md  overflow — handbacks and findings too bulky to inline
 ```
@@ -41,7 +43,7 @@ different rates.
 - `run.json` is the **plan** — what was aligned. It is written once at the align
   checkpoint and then frozen; its `decomposition` never changes without a
   re-align (a shape change re-triggers the align gate — see spec §3). The one
-  exception is the run-level `status`, which flips once to a terminal value when
+  exception is the run-level `status` (with its `terminal` record), set once when
   the run closes.
 - `tasks/<id>.json` is the **live state** — what has happened to a task since
   dispatch. It is rewritten every time the task moves (dispatched → in-qa →
@@ -56,7 +58,7 @@ thing that appears on both sides. `id` is a join key, not duplicated content.
 Why the split: the plan is immutable and small, so it is read once and cached;
 the live state churns and is what concurrent finishes rewrite. Keeping them apart
 means a task-file write never risks the plan, and the plan can be trusted as the
-frozen record of what the human approved.
+frozen record of what was approved (by the human at align, or by a pre-approved brief).
 
 > The prototype under `prototypes/08-run-state/.hive-runs-EXAMPLE/` predates this
 > split — it still repeats `goal`/`role`/`owns`/`deps`/`acceptanceCriteria` in
@@ -78,6 +80,11 @@ frozen record of what the human approved.
     "ref": "main",                      // trunk, or the existing <branch> / <remote>/<branch>
     "sha": "a1b9f30"                    // its tip at align; Builders start here
   },
+  "approval": {                         // who approved the decomposition
+    "mode": "pre-approved",             // interactive (human at align) | pre-approved (brief)
+    "brief": "brief.md"                 // pre-approved only — the stored copy, relative to the run dir
+  },
+  "terminal": null,                     // null until the run closes; then set with status (below)
   "startedAt": "2026-08-25T10:30:04Z",  // UTC ISO-8601, Z-suffixed
   "profileStamp": "a1b9f30",            // .hive/profile.json version/SHA aligned against
 
@@ -104,7 +111,32 @@ Field notes:
 - `status` — the **run-level roll-up**, one authoritative value. `in-progress`
   until the run reaches a [terminal state](../CONTEXT.md#run); then `landed` (all
   tasks merged green) or `halted` (stopped at an escalation the human declined to
-  continue). This is the *only* mutable field in `run.json`.
+  continue — or, in a pre-approved run, at any escalation). It flips once, in the same
+  write as `terminal`; together they are the only post-align change to `run.json`.
+- `approval` — how the decomposition was approved. `interactive`: a human approved it
+  at the align checkpoint. `pre-approved`: an outside caller's brief (stored as
+  `brief.md`) stood in for both human gates. A resumed run keeps the mode it started in.
+- `terminal` — the **machine-readable record of how the run ended**, `null` while
+  `in-progress`, set once with the terminal `status`, for a caller (or `status`) to read
+  instead of prose:
+
+  ```jsonc
+  "terminal": {
+    "reason": "qa-round-cap",           // see the reason codes below
+    "taskIds": ["t2"],                  // tasks the reason concerns; [] if none
+    "detail": "t2 blocking findings static over 2 rounds (3 → 3)",
+    "at": "2026-08-25T11:42:10Z"        // UTC ISO-8601
+  }
+  ```
+
+  `reason` is `landed` for a landed run; for a halted run it is the escalation's
+  **cause**, in either mode: `qa-round-cap` (QA ladder exhausted on a static/growing
+  trend) · `task-failed` (a `failed` verdict) · `needs-realign` (a shape change needing
+  fresh approval) · `merge-conflict` (unreconcilable) · `branch-diverged` (integration
+  branch diverged or rewritten) · `base-gates-red` (an existing branch's opening tip
+  fails its gates) · `task-timeout` (a silent/hung task) · `brief-unanswerable` (a
+  plan-changing question the brief can't answer) · `out-of-brief-scope` (the work can't
+  be done inside the brief).
 - `profileStamp` — the profile version the decomposition was reasoned against, so
   a resumed Queen (or `status`) can flag profile drift since align.
 - `decomposition` — the aligned [DAG](../CONTEXT.md#decomposition). Per-task

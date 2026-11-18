@@ -1,6 +1,6 @@
 ---
 name: run
-description: "Run a loose ask through the hive: the Queen scouts the repo, proposes a decomposition, aligns it with you at a one-screen checkpoint, then dispatches worker bees — Builders in isolated worktrees — throttled under a concurrency cap, writing all state to .hive/runs/. Use for 'hive:run <ask>', 'run this through the hive', 'build X with the bees', or handing the Queen a feature/fix to decompose and dispatch. The Queen orchestrates; she never writes code."
+description: "Run a loose ask through the hive: the Queen scouts the repo, proposes a decomposition, aligns it with you at a one-screen checkpoint, then dispatches worker bees — Builders in isolated worktrees — throttled under a concurrency cap, writing all state to .hive/runs/. Can also run unattended from a brief approved elsewhere (pre-approved mode). Use for 'hive:run <ask>', 'run this through the hive', 'build X with the bees', or handing the Queen a feature/fix to decompose and dispatch. The Queen orchestrates; she never writes code."
 ---
 
 # hive:run
@@ -52,9 +52,53 @@ run-state, and follow it field-for-field.
   branch naming to `profile.ticketBranchTemplate`, and the branch is one you build onto if
   it already exists (§6, §10). Record it verbatim as `run.json.ticketId`. Absent →
   today's naming and today's branch-from-trunk behaviour, unchanged.
+- **Approved brief / pre-approved mode:** the invocation may carry `--brief <path>` — a
+  brief someone outside the run already approved (behaviour, acceptance criteria, out of
+  scope) — and `--pre-approved`. The run is **pre-approved** when a brief is supplied
+  **and** either `--pre-approved` is passed or `profile.preApproved` is `true`. Otherwise
+  it is **interactive** (today's behaviour; a brief alone is just extra context for the
+  ask). `--pre-approved` with no brief is an error: refuse and stop before scouting —
+  there is nothing approved to run. Read §1a before going further in a pre-approved run.
 - **Resolve the integration branch now, before align** — derive `integrationBranch` and
   `integrationBase` by the rules in §6 so the align screen (§5) can show whether the run
   creates a branch or builds onto an existing one. §6 persists what you resolved here.
+
+## 1a · Pre-approved runs — unattended, no human waits
+
+A pre-approved run exists so an outside caller (e.g. a software factory whose human
+approved the brief in a ticket tracker) can use Hive as its build engine and **never wait
+on a human**. **Pre-approved changes who approves, never what Hive may do:** you still
+scout, decompose into write-claimed tasks, dispatch Builders into worktrees, run the Guard
+QA loop under the cap, persist resumable run-state, and you still **never push, never
+merge to trunk, never open a PR**. Only the two human gates and escalation change:
+
+- **Gate 1 (align, §5) — the brief is the approval.** Decompose as usual, render the align
+  table (for the record — log it in the run, don't wait on it), and dispatch without
+  stopping. The decomposition must stay **inside the brief**: every task traces to its
+  behaviour or acceptance criteria, nothing lands in its out-of-scope list. Resolve the
+  Scout's hard questions **from the brief**; a question the brief cannot answer that
+  changes the plan is an escalation (below), not a guess.
+- **Re-aligns end the run.** The brief approved one decomposition; any shape change (§5's
+  living DAG — a re-decompose, a new task, a `blocked` Builder whose path another task
+  owns) needs a fresh approval, so it is an escalation. A disjoint claim-widen is not a
+  shape change and proceeds as usual.
+- **Gate 2 (integration, §10) — auto-confirm.** When the batch is merged green, close the
+  run `landed` and render the outcome summary; do not ask. The branch is the caller's to
+  push.
+- **Escalation ends the run instead of waiting.** Anything that would otherwise hand to a
+  human — a QA round cap hit on a static/growing trend, a `failed` verdict, a re-align, an
+  unreconcilable merge conflict, a diverged or rewritten integration branch, red gates on
+  an existing branch's opening tip, a hung task, a brief that can't answer a plan-changing
+  question — **ends the run instead of waiting**: stop dispatching, let in-flight bees
+  finish or abandon them, land nothing further, and close `halted` with
+  `run.json.terminal` recording why (§10). Decisions that are yours alone — a disjoint
+  claim-widen, a rollback-and-reopen inside the QA ladder — still proceed without anyone.
+- **Ending before dispatch.** If the run ends at align (e.g. the brief can't answer a
+  plan-changing question), still create the run directory, store the brief and write
+  `run.json` with the decomposition as drafted, `status: "halted"` and `terminal` — the
+  caller always gets a record to read.
+- **No interactive tools.** Never ask a question or wait for input in a pre-approved run;
+  every stop is a recorded `terminal` the caller can read.
 
 ## 2 · Scout the terrain
 
@@ -182,6 +226,8 @@ Rules for the render:
   align, not silently.
 - The human **approves / amends / rejects the whole thing**. No dispatch happens before
   approval.
+- **Pre-approved run (§1a):** write the same table to `artifacts/align.md` (the record of
+  what the brief approved) and proceed — nobody is asked.
 
 ### Living DAG — when a change bounces back to this checkpoint
 
@@ -228,16 +274,19 @@ Only after approval, create the run and write the plan. Follow `run-state.md` ex
     `profile.trunk`, `sha` = trunk's tip — exactly today's behaviour.
   Unticketed runs record `integrationBase` too (`mode: "new"` off trunk).
 - Create `${CLAUDE_PROJECT_DIR}/.hive/runs/<runId>/` with `tasks/` and `artifacts/`
-  subdirs.
+  subdirs. In a **pre-approved run** (§1a), copy the brief verbatim to
+  `.hive/runs/<runId>/brief.md` — the approved decomposition input, kept with the run even
+  if the caller's file later changes.
 - Write `run.json` with: `runId`, `ask` (verbatim), `status: "in-progress"`,
   `integrationBranch` (the git-flow name derived above), `ticketId` (only on a ticketed
-  run), `integrationBase` (`mode`/`ref`/`sha`, derived above), `startedAt` (UTC ISO-8601, `Z`-suffixed),
+  run), `integrationBase` (`mode`/`ref`/`sha`, derived above), `approval` (`{"mode":
+  "interactive"}`, or `{"mode": "pre-approved", "brief": "brief.md"}`), `terminal: null`, `startedAt` (UTC ISO-8601, `Z`-suffixed),
   `profileStamp` (the profile version/SHA you aligned against), and `decomposition`
   (the aligned DAG — `id`/`goal`/`role`/`deps` for all; `owns`/`acceptanceCriteria` for
   Builders; optional `runs`). **Plan fields live only here.**
 - `run.json` is **frozen** after this write. Its `decomposition` changes only through a
-  re-align (§5); its only mutable field is the run-level `status`, flipped once to a
-  terminal value at close (§10). A re-align rewrites `run.json` (a new aligned plan).
+  re-align (§5); its only mutable fields are the run-level `status` and `terminal`, set
+  together once at close (§10). A re-align rewrites `run.json` (a new aligned plan).
 
 **Write atomically — you are the sole writer.** Write to a temp file in the *same
 directory* (`.run.json.tmp`), then `rename()` over the destination, so a reader never
@@ -327,7 +376,8 @@ Persist it (you are the sole writer), then route on the verdict. **`blocked` and
 > status (`in-qa` / `blocked` / `failed`), runs the **QA loop (§9)** for `in-qa` tasks to
 > a green pass, then **lands the green batch in integration (§10)** and closes the run in
 > a terminal state. A run built here scouts, aligns, dispatches, throttles, QAs to clean,
-> and integrates — end to end, human at the two gates (align, integration) only.
+> and integrates — end to end, human at the two gates (align, integration) only, or at
+> neither in a pre-approved run (§1a).
 
 ## 8 · The concurrency cap + Queen self-throttle
 
@@ -356,7 +406,9 @@ mark it `failed` and escalate. The budget is the optional `profile.taskTimeoutMi
 (default none); `maxTurns` guards a runaway worker, not a silent one. On a **resumed**
 run, any task still `dispatched` with no persisted handback had its live worker die with
 the old session — **presumed dead** → re-dispatch or escalate; in-flight work that never
-reached disk reverts to `ready`. Persisted state is the only truth on resume.
+reached disk reverts to `ready`. Persisted state is the only truth on resume — including
+the run's mode: if `run.json.approval.mode` is `"pre-approved"`, the resumed run stays
+unattended (§1a), working from the stored `brief.md`.
 
 ## 9 · The QA loop — Guard review → same-Builder fix rounds
 
@@ -447,6 +499,9 @@ Escalation is a **human gate**, not a silent retry:
   doomed round. Record the escalation reason in `queenDecision`.
 - A **`failed` verdict short-circuits straight here** (§7) — no fix rounds; the premise,
   or the worker, needs a human, not another grind.
+- **Pre-approved run (§1a):** there is no human to surface to — the escalation **ends the
+  run instead of waiting**: close it `halted` with `run.json.terminal` naming the reason
+  and the task (§10).
 
 ### Out-of-boundary findings — the Guard flags, the Queen disposes
 
@@ -594,18 +649,27 @@ and performs the **one irreversible act — the push / PR**, which is theirs alo
 Escalations (a re-align, an unreconcilable conflict) are the only mid-integration human
 entry — human at the exits, never inside the grind (§9).
 
+**Pre-approved run (§1a): auto-confirm.** There is no confirmation to wait for — when the
+batch is merged and green, close the run `landed` and render the outcome summary. The
+branch is still only handed over: you never push it, merge it to trunk, or open a PR.
+
 ### Terminal state — landed or halted
 
 A run is **done = a terminal state, not necessarily success**:
 
 - **landed** — every Builder task merged green onto the integration branch, handed to the
   human to push.
-- **halted** — the run stopped at an escalation the human declined to continue.
+- **halted** — the run stopped at an escalation the human declined to continue, or — in a
+  pre-approved run — at any escalation at all (§1a).
 
 Persist the terminal state (temp-file + rename, sole writer):
 
-- **Flip `run.json.status`** to `landed` or `halted`. This is the **only post-align write
-  to `run.json`** — its single mutable field, flipped once (§6, `run-state.md`).
+- **Flip `run.json.status`** to `landed` or `halted`, and in the **same write** set
+  `run.json.terminal` — the machine-readable why: `reason` (`landed`, or the escalation's
+  cause — the codes are listed in `run-state.md`; an interactive halt records the cause the
+  human declined to continue past), `taskIds`, `detail` (one line) and `at`. This is the
+  **only post-align write to `run.json`** — made once (§6, `run-state.md`). A caller reads
+  `terminal` instead of parsing prose.
 - For each landed Builder task, set its `tasks/<id>.json` **`status: "landed"`** and
   **`landedAt`** now, and record the integration merge in `location.commits`.
 - Tasks not landed keep their real state (`failed`, or `in-qa` at a halt) — nothing is
@@ -665,6 +729,9 @@ run-state — nothing here is stored as prose.
   rename. Plan fields only in `run.json`, live fields only in `tasks/<id>.json`, no
   field in both.
 - **Never exceed the cap.** No 21st-agent error — self-throttle via the ready-queue.
+- **Pre-approved changes who approves, never what Hive may do.** A pre-approved run (§1a)
+  skips the two human gates on the strength of the brief and ends at any escalation with
+  a recorded `terminal` — it never asks, never waits, and still never pushes or opens a PR.
 - **Never push or open a PR.** Integration (§10) merges the green branches onto the local
   `<type>/<slug>` branch (or a ticketed run's existing branch) and hands the human the
   push; nothing in Hive pushes — not even onto an open PR's branch. The Queen's
@@ -679,12 +746,13 @@ run-state — nothing here is stored as prose.
 - **A clean pass is clean.** Zero findings lands the task green — never invent a fix round
   to look busy, and never route an out-of-boundary finding back into the current Builder.
 - **The loop is AFK; escalation is the gate.** Run Queen ↔ Builder ↔ Guard autonomously
-  between align and integration; pull the human in only at an escalation (round cap hit on
+  between align and integration; pull the human in only at an escalation (in a
+  pre-approved run, end the run there instead — §1a) (round cap hit on
   a static/growing trend, a `failed` verdict, or a re-decompose that reshapes the DAG).
-- **Integration is AFK too; the human confirms once.** Interior integration (merge → gate,
+- **Integration is AFK too; the human confirms once** (a pre-approved run auto-confirms). Interior integration (merge → gate,
   rollbacks, rebased conflict fixes) runs unattended (§10); the human enters only at an
   escalation, and confirms once at the end on the finished batch — the push is theirs.
 - **A run ends in a terminal state.** Close every run at `landed` or `halted`: flip
-  `run.json.status` once, set landed tasks' `landedAt`/`status`, and render the one-screen
+  `run.json.status` once together with its `terminal` record, set landed tasks' `landedAt`/`status`, and render the one-screen
   outcome summary. Cleanup per §10 — clean worktrees removed, Builder branches and
   run-state kept, failed worktrees preserved.

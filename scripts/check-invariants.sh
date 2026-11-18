@@ -6,7 +6,8 @@
 # a load-bearing rule can silently regress with a careless edit and nothing
 # catches it. This script asserts that each such rule is still present in the
 # text, grouped by the four lifecycle phases (decompose → dispatch → QA →
-# integrate). It is the layer that runs *today* — zero deps, deterministic, free
+# integrate), plus the cross-cutting pre-approved (unattended) mode. It is the
+# layer that runs *today* — zero deps, deterministic, free
 # — alongside the richer `claude plugin eval` suite in evals/ (see evals/README.md).
 #
 # A row asserts a short "term of art" — a distinctive phrase a benign rewording
@@ -129,6 +130,22 @@ assert integrate "$RUN" "an existing branch's opening tip is proven green before
   'Run the gates on the opening tip'
 assert integrate "$BUILDER" "Builders start from the run's integration base" \
   'integration base'
+
+# ── PRE-APPROVED (unattended) ────────────────────────────────────────────────
+# A caller-approved brief stands in for both human gates; escalations end the run
+# with a machine-readable outcome instead of waiting. Still never pushes.
+assert preapproved "$SCHEMA" "pre-approved mode is a profile opt-in (off by default)" \
+  '"preApproved"'
+assert preapproved "$RUN" "the approved brief stands in for gate 1 (align)" \
+  'the brief is the approval'
+assert preapproved "$RUN" "gate 2 auto-confirms in pre-approved mode" \
+  'auto-confirm'
+assert preapproved "$RUN" "an escalation ends a pre-approved run instead of waiting" \
+  'ends the run instead of waiting'
+assert preapproved "$RUN" "the terminal outcome is recorded machine-readably" \
+  'run.json.terminal'
+assert preapproved "$RUN" "pre-approved mode still never pushes, merges to trunk, or opens a PR" \
+  'never what Hive may do'
 
 # ── Roll-up ──────────────────────────────────────────────────────────────────
 echo

@@ -70,6 +70,12 @@
       "description": "Template used INSTEAD of integrationBranchTemplate when a ticket ID is supplied for the run (`--ticket <id>`). Same `{type}`/`{slug}` placeholders plus `{ticketId}` — the supplied ID, kept as given (case preserved; only characters git forbids in a ref are replaced with `-`). Default `\"{type}/{ticketId}-{slug}\"` yields e.g. `feature/PROJ-42-contact-phone-field`. A ticketed branch is built onto if it already exists (locally or on the remote — e.g. a draft PR is already open on it) instead of being branched from trunk. Hive still never pushes it.",
       "examples": ["{type}/{ticketId}-{slug}", "{ticketId}", "{type}/{ticketId}"]
     },
+    "preApproved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Opt this repo into pre-approved (unattended) runs. When true, a run invoked with an approved brief (`--brief <path>`) skips the align checkpoint and the end-of-run confirmation; an escalation ends the run with a recorded outcome instead of waiting for a human. A run without a brief stays interactive. Per-run equivalent: the `--pre-approved` flag. Off by default. Never lets Hive push, merge to trunk, or open a PR.",
+      "examples": [false, true]
+    },
     "maxConcurrentBuilders": {
       "type": "integer",
       "minimum": 1,

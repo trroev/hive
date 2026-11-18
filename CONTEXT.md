@@ -145,7 +145,8 @@ differently and are never collapsed.
 One invocation of `/hive:run` on a loose ask: scout → align → build → QA loop →
 integrate. It ends in a **terminal state** — **landed** (all tasks merged onto a
 green integration branch, handed to the human to push) or **halted** (stopped at
-an escalation the human chose not to continue). The Queen closes a run with a
+an escalation the human chose not to continue — or, in a
+[pre-approved run](#pre-approved-run), at any escalation). The Queen closes a run with a
 one-screen outcome summary, the mirror of the align checkpoint.
 
 ## Integration
@@ -169,6 +170,15 @@ branch starts from — is trunk's tip, unless the ticket's branch already exists
 (e.g. a draft PR opened before the build); then the run **builds onto** that
 branch, and its tip at that moment is the **opening tip**, below which the run
 never moves the branch. An unticketed run's base is always trunk.
+
+## Pre-approved run
+
+A [run](#run) whose decomposition was approved **before** it started: an outside
+caller supplies a brief someone already approved (behaviour, acceptance criteria,
+out of scope), and the repo or the invocation opts in. The brief stands in for both
+human gates, and any escalation **ends the run** rather than waiting for a human.
+The opposite is an **interactive** run. Neither mode lets Hive push, merge to trunk,
+or open a PR.
 
 ## Run state
 
@@ -202,12 +212,14 @@ The autonomous cycle after a Builder hands back: Guard reviews the worktree and
 returns findings; blocking findings route back to the **same Builder**
 (`SendMessage`, worktree + context intact; fresh-into-the-same-worktree as
 fallback) for a fix round; Guard re-reviews. Runs AFK between two human
-gates — the align checkpoint on entry, integration on exit. Bounded by a
+gates — the align checkpoint on entry, integration on exit (a pre-approved run
+has neither). Bounded by a
 trend-aware round cap (default ~2, profile-overridable): extended a round while
 blocking findings shrink, escalated early when they don't. Escalation hands up
 to the Queen to re-examine the premise and, if the task is mis-scoped,
 re-decompose (a shape change → re-align). A `failed` [verdict](#outcome-verdict)
-skips the loop straight to escalation.
+skips the loop straight to escalation. In a pre-approved run an escalation ends
+the run rather than handing up to a human.
 
 ## Severity gate
 

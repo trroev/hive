@@ -27,14 +27,18 @@ phases from two angles.
 | [`integration-never-pushes/`](integration-never-pushes) | integrate | The run closes by **handing the human a local branch to push** — the Queen never runs `git push` (`tool_used Bash "git push"`, `max: 0`) or opens a PR. |
 | [`integration-ticket-new-branch/`](integration-ticket-new-branch) | integrate | A `--ticket` run whose branch **doesn't exist** creates `feature/PROJ-42-…` **from trunk** (today's behaviour), lands, re-runs gates, never pushes. |
 | [`integration-onto-existing-branch/`](integration-onto-existing-branch) | integrate | A `--ticket` run whose branch **already exists on the remote** (a draft PR's) **fetches and builds onto it** — its commits stay intact (no `checkout -B` / `branch -f` / force), gates re-run, never pushes. |
+| [`preapproved-run-never-waits/`](preapproved-run-never-waits) | align (pre-approved) | `/hive:run --pre-approved --brief …` treats the approved brief as the align approval: it **dispatches a `hive:builder` without asking** (`tool_used AskUserQuestion`, `max: 0`), stays inside the brief, never pushes. |
+| [`preapproved-run-profile-opt-in/`](preapproved-run-profile-opt-in) | align (pre-approved) | Same, but enabled by `profile.preApproved: true` plus `--brief` with **no flag** — the profile route alone makes the run pre-approved. |
+| [`preapproved-escalation-ends-run/`](preapproved-escalation-ends-run) | QA (pre-approved) | An exhausted QA ladder in a pre-approved run **ends the run `halted` with a `run.json.terminal` reason of `qa-round-cap`** (checked on disk) — no question, no further round (`Agent`/`SendMessage` `max: 0`), no landing, no push. |
 
 Graders lean on deterministic checks (`tool_used`, `regex`) first and use an `llm`
-judge only for the semantic call. The decompose and dispatch cases drive `/hive:run`
-against a scaffolded repo; `qa-clean-is-clean` and `integration-never-pushes` put the
-model in the Queen's seat at a mid-run decision point; the two ticketed integration
-cases put it in the Queen's seat **and** give it a scaffolded repo to integrate for
-real with git (with `append_system_prompt` telling it to follow the run skill),
-so the `--ablation with-without` delta reflects the skill prose itself.
+judge only for the semantic call. The decompose, dispatch and two `preapproved-run-*`
+cases drive `/hive:run` itself against a scaffolded repo. The rest put the model in the
+Queen's seat at a mid-run decision point (with `append_system_prompt` telling it to
+follow the run skill, so the `--ablation with-without` delta reflects the skill prose
+itself): `qa-clean-is-clean` and `integration-never-pushes` by prompt alone; the two
+ticketed integration cases and `preapproved-escalation-ends-run` with a scaffolded repo
+(and run-state) to act on for real.
 
 `fixtures/primed-repo/` is a tiny primed repo (profile + architecture map + a
 contact form) that the scaffolds mirror inline.
@@ -85,6 +89,8 @@ The harness must **catch a deliberately introduced regression**. Both layers do:
   | Have the Queen `git push` at the end of integration | `integration-never-pushes` |
   | Have a ticketed run recreate/suffix an existing branch from trunk | `integration-onto-existing-branch` |
   | Drop `{ticketId}` from the ticketed branch name | `integration-ticket-new-branch` |
+  | Make a pre-approved run stop at the align checkpoint | `preapproved-run-never-waits` |
+  | Have a pre-approved run wait for a human at an escalation | `preapproved-escalation-ends-run` |
 
 ## Caveats
 
