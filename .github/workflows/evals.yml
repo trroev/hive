@@ -1,49 +1,64 @@
 name: evals
 
-# Hive's self-test harness (issue #5), two layers:
-#   1. invariants  — deterministic grep for load-bearing lifecycle rules. Runs on
-#                    every push/PR, no secrets, and gates the branch.
-#   2. plugin-eval — the `claude plugin eval` behavioral suite. Runs only when an
-#                    API key is configured (it costs tokens) and doesn't block the
-#                    branch yet; it becomes a real gate once it has a stable record.
+# Hive's self-test harness (ADR-0013), hardened per ADR-0015:
+#   1. invariants  — deterministic prose-regression grep, every push/PR. Its job
+#                    name is the main ruleset's required check — don't rename it.
+#   2. plugin-eval — the `claude plugin eval` behavioral suite (costs tokens).
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
+
+# Supersede stale runs of the same PR; every push to main gets its own run.
+concurrency:
+  group: evals-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   invariants:
     name: invariant check (prose regression guard)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Check lifecycle invariants
         run: bash scripts/check-invariants.sh
 
   plugin-eval:
     name: claude plugin eval suite
+    # Only reviewed code on main gets the API key: never pull_request, and a manual
+    # dispatch only from main (not an arbitrary unmerged branch).
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Don't block on the behavioral suite yet — LLM graders are inherently noisy.
     # Flip this off once it has a stable track record as a gate.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: "20"
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      # A global CLI with no lockfile to live in; the exact version pin is the control.
+      - name: Install Claude Code (pinned)
+        run: npm install -g @anthropic-ai/claude-code@2.1.327 # zizmor: ignore[adhoc-packages]
       - name: Run eval suite
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
             echo "ANTHROPIC_API_KEY not set — skipping the behavioral eval suite."
-            echo "(The invariant check above is the active gate.)"
+            echo "(The invariant check is the active gate.)"
             exit 0
           fi
           claude plugin eval . \
@@ -57,7 +72,7 @@ jobs:
             --threshold 0.8
       - name: Upload eval results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eval-results
           path: evals/results/
