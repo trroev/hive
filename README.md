@@ -108,7 +108,7 @@ the prose. Two layers, both wired into CI ([`.github/workflows/evals.yml`](.gith
 bash scripts/check-invariants.sh
 
 # 2. Behavioral suite — `claude plugin eval`, one case per lifecycle phase
-#    (decompose → dispatch → QA → integrate). Early-access gated; see evals/README.md.
+#    (decompose → dispatch → QA → integrate). Costs tokens; see evals/README.md.
 claude plugin eval . --scaffold --ablation with-without --no-publish
 ```
 

@@ -54,3 +54,11 @@ gate — the invariant job is the active gate).
 
 See `evals/README.md` (the suite + the regression demo), `scripts/check-invariants.sh`,
 `.github/workflows/evals.yml`, and the lifecycle these check in `reference/lifecycle.md`.
+
+**Update (2026-11-18):** `claude plugin eval` is no longer early-access gated — it
+runs on a normal credential in Claude Code 2.1.x with no enablement env var, so the
+behavioral suite is now executable and was run green. That first real run also
+showed three `llm` graders used a free-text `focus:` key the CLI rejects; they now
+carry their criteria in the markdown body (see `evals/README.md` caveats). The
+`plugin-eval` CI job stays `continue-on-error` until the suite has a track record
+as a stable gate.

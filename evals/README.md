@@ -11,10 +11,10 @@ It is one of **two layers** (see [ADR-0013](../docs/adr/0013-eval-harness.md)):
 | Layer | What | Runs |
 | --- | --- | --- |
 | `scripts/check-invariants.sh` | Deterministic grep for load-bearing rules | **Today**, zero deps/cost |
-| `evals/` (this dir) | LLM-behavioral cases against the real skills/agents | Once `claude plugin eval` early access is enabled |
+| `evals/` (this dir) | LLM-behavioral cases against the real skills/agents | On demand, and in CI when an API key is set (costs tokens) |
 
 The static check is the fast guard that runs on every PR; this suite is the richer
-behavioral net for when early access lands. Together they cover the same four
+behavioral net that proves the model still *follows* the rules. Together they cover the same four
 phases from two angles.
 
 ## The cases — one per lifecycle phase
@@ -37,11 +37,8 @@ contact form) that the scaffolds mirror inline.
 
 ## Running
 
-`claude plugin eval` is currently **early-access gated**. Until your org is
-enabled it prints `` `plugin eval` is currently in early access `` and exits, so
-the suite is authored-but-unexecuted in that state (the static check still runs).
-
-Once enabled, from the repo root:
+From the repo root (each run is a real `claude` session on your credential, so it
+costs tokens — roughly $0.10–0.40 per run):
 
 ```bash
 # Whole suite, no-plugin baseline arm for the delta, JSON for CI, local report
@@ -53,8 +50,8 @@ claude plugin eval . \
   --json evals/results/latest.json \
   --max-cost-usd 15
 
-# One case, verbose
-claude plugin eval . --case decompose-requires-profile --scaffold --verbose
+# One case (matched by its `name`, not its directory), verbose
+claude plugin eval . --case "Decompose:*" --scaffold --verbose
 
 # By phase tag
 claude plugin eval . --tag qa --scaffold
@@ -73,7 +70,7 @@ The harness must **catch a deliberately introduced regression**. Both layers do:
   `disallowedTools: Agent` from `agents/builder.md`. `bash
   scripts/check-invariants.sh` then exits 1, naming the exact invariant. Restore
   and it returns to green. (Verified in-repo.)
-- **Behavioral (once early access is on):** introduce the matching prose
+- **Behavioral:** introduce the matching prose
   regression and the paired case fails:
 
   | Regression in the prose | Failing case |
@@ -85,9 +82,11 @@ The harness must **catch a deliberately introduced regression**. Both layers do:
 
 ## Caveats
 
-- `claude plugin eval` has **no public docs** yet; the grader field names here are
-  authored against the CLI's embedded reference. If the first enabled run rejects
-  a grader field, adjust it to the version the CLI reports — the invariants each
-  case pins are what matter, not the exact YAML key.
+- `claude plugin eval` has **no public docs** yet. Grader shape the CLI accepts:
+  an `llm` grader's frontmatter is just `type: llm` / `weight`, with the criteria
+  in the markdown body; `focus` exists but is an enum (e.g. `last_message`), not
+  free text — a free-text `focus` fails the whole case with `invalid case.yaml`.
+  `claude plugin eval init --bare <name>` writes a known-good template.
+- Case names, not directory names, are what `--case <glob>` matches.
 - The behavioral cases are non-deterministic (LLM); the static check is the
   deterministic backstop. Keep both green.

@@ -3,9 +3,9 @@ name: evals
 # Hive's self-test harness (issue #5), two layers:
 #   1. invariants  — deterministic grep for load-bearing lifecycle rules. Runs on
 #                    every push/PR, no secrets, and gates the branch.
-#   2. plugin-eval — the `claude plugin eval` behavioral suite. Early-access gated,
-#                    so it runs only when an API key is configured and never blocks
-#                    the branch yet; it becomes a real gate once early access is on.
+#   2. plugin-eval — the `claude plugin eval` behavioral suite. Runs only when an
+#                    API key is configured (it costs tokens) and doesn't block the
+#                    branch yet; it becomes a real gate once it has a stable record.
 
 on:
   push:
@@ -27,8 +27,8 @@ jobs:
   plugin-eval:
     name: claude plugin eval suite
     runs-on: ubuntu-latest
-    # Don't block on the behavioral suite while `plugin eval` is early-access gated
-    # and the LLM graders are inherently noisy. Flip this off once it's a trusted gate.
+    # Don't block on the behavioral suite yet — LLM graders are inherently noisy.
+    # Flip this off once it has a stable track record as a gate.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -40,11 +40,6 @@ jobs:
       - name: Run eval suite
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Early access enablement. In CI (no server-side flag fetch) `plugin eval`
-          # needs an enablement env var whose EXACT NAME Anthropic provides during
-          # onboarding — set it as a repo secret/variable and export it here. The
-          # name below is a placeholder; replace it with the one you were given.
-          # PLUGIN_EVAL_EARLY_ACCESS: "true"
         run: |
           if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
             echo "ANTHROPIC_API_KEY not set — skipping the behavioral eval suite."
@@ -52,6 +47,7 @@ jobs:
             exit 0
           fi
           claude plugin eval . \
+            --trust-plugin \
             --scaffold \
             --allow-tools Bash Write Edit \
             --ablation with-without \
