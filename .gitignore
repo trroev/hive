@@ -1,3 +1,4 @@
 .hive/runs/
 .DS_Store
 evals/results/
+.claude/worktrees/
