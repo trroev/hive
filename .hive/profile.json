@@ -1,0 +1,20 @@
+{
+  "hiveProfileVersion": 1,
+  "trunk": "main",
+  "gates": {
+    "invariants": "bash scripts/check-invariants.sh"
+  },
+  "sharedSurfaces": [
+    "skills/run/SKILL.md",
+    "scripts/check-invariants.sh",
+    "CONTEXT.md",
+    "README.md",
+    "evals/README.md",
+    "docs/adr/**",
+    "reference/run-state.md",
+    "reference/profile.schema.json"
+  ],
+  "protectedPaths": [".env*", ".github/**", ".claude-plugin/**", "LICENSE"],
+  "conventions": ["CONTEXT.md", "reference/PRINCIPLES.md", "docs/adr/README.md"],
+  "maxConcurrentBuilders": 3
+}
