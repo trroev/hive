@@ -79,6 +79,12 @@ exists — locally or on the remote, say because a draft PR is already open on i
 Queen builds onto it, leaving its commits intact, instead of branching from trunk. You
 still push it.
 
+**Unattended runs.** If a brief was already approved elsewhere (say, in your ticket
+tracker), pass it with `--brief <path> --pre-approved` (or set `profile.preApproved`).
+The Queen still scouts and decomposes, but treats the brief as the align approval and
+auto-confirms at the end; any escalation ends the run as `halted` with a
+machine-readable `run.json.terminal` instead of waiting. Hive still never pushes.
+
 ## Dogfooding — run Hive on Hive
 
 To run a local checkout while developing the plugin:

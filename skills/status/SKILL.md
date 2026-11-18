@@ -78,7 +78,11 @@ Next: t2 fix round in flight · t3 awaiting your call on claim-widen · then int
   and the pending integration. Derive it from task states; keep it to one line.
 - On a **resumed or closed** run, add a short note under the table: for a resumed
   run, which tasks reverted to `ready` or are presumed dead (stale `dispatched`);
-  for a closed run, that it ended `landed`/`halted`.
+  for a closed run, that it ended `landed`/`halted`, with `terminal.reason`,
+  `terminal.taskIds` and `terminal.detail` when present.
+- A **pre-approved** run (`approval.mode`) shows `pre-approved` in the header's status
+  line, and its Next line never says "awaiting your call" — nothing in it waits on a
+  human; an escalation closes it instead.
 - If `profileStamp` differs from the current `.hive/profile.json` version, note
   the drift in one line — the plan was aligned against an older profile.
 

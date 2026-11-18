@@ -19,6 +19,7 @@ herself (she never writes code); Hive pushing or opening PRs.
 
 **Note:** the integration branch *naming* was later revised — see ADR-0011; a
 ticketed run may build onto an existing branch instead of branching from trunk —
-see ADR-0014.
+see ADR-0014; a pre-approved run auto-confirms the closing confirmation — see
+ADR-0016.
 
 See `reference/lifecycle.md`.

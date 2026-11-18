@@ -19,4 +19,7 @@ rather than looping on a bad plan.
 **Rejected:** a fresh Builder per round (throws away worktree + context);
 run-until-clean; a human inside every round (defeats the fleet).
 
+**Note:** in a pre-approved run there is no human to escalate to — an escalation ends
+the run with a recorded outcome instead; see ADR-0016.
+
 See `reference/lifecycle.md`.

@@ -3,7 +3,10 @@
 The small set of rules every role and skill is an application of. When a change is
 proposed, check it against these. Vocabulary is fixed in
 [`CONTEXT.md`](../CONTEXT.md); the standing policy they encode is the spec's "one
-fixed mode" — no autonomy modes, no per-run trust dials.
+fixed mode" — no autonomy modes, no per-run trust dials. The one sanctioned exception
+is the **pre-approved run** ([ADR-0016](../docs/adr/0016-pre-approved-runs.md)): it
+changes *who approves* (a brief approved outside the run), never what Hive may do.
+General autonomy modes remain an open question (issue #3).
 
 ## 1 · The Queen never writes code
 
@@ -44,7 +47,8 @@ inventing a nit to look useful is itself a defect.
 
 Hive never pushes, merges to trunk, or opens a PR. Integration lands on a *local*
 branch the Queen hands you; **the push is yours**, confirmed once on the finished
-batch. Autonomy is bounded to the reversible.
+batch (or, in a pre-approved run, made by the caller after it reads the result).
+Autonomy is bounded to the reversible.
 
 ## 7 · Profile-driven, never hardcoded
 

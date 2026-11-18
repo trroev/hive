@@ -31,7 +31,8 @@ scout → align ⟨gate⟩ → dispatch → throttle → QA loop → integrate �
    after each merge, and closes
    with a one-screen outcome summary.
 7. **Terminal** — the run ends **landed** (all tasks merged green, handed to you) or
-   **halted** (stopped at an escalation you declined to continue).
+   **halted** (stopped at an escalation you declined to continue — or, in a pre-approved
+   run, at any escalation).
 
 ## The two human gates
 
@@ -40,6 +41,12 @@ pulls you back in mid-loop, and it is itself a gate.
 
 - **Align** (entry) — you approve the decomposition before a single bee is dispatched.
 - **Integration** (exit) — one confirmation on the finished, green batch.
+
+**Pre-approved runs** (`--brief <path>` plus `--pre-approved` or `profile.preApproved`)
+replace both gates with a brief a human already approved elsewhere: align proceeds
+without waiting, integration auto-confirms, and any escalation ends the run as
+`halted` with a machine-readable `run.json.terminal` record instead of waiting. Nothing else
+changes — and the push is still not Hive's.
 
 ## The push is yours
 
