@@ -2,7 +2,7 @@
   "name": "hive",
   "displayName": "Hive",
   "description": "A personal agent crew for Claude Code. Your main session is the Queen: she holds the plan, decomposes work into tasks with declared file-ownership boundaries, dispatches worker bees (scout, forager, builder, guard) into isolated git worktrees, and sequences the landings herself. Project-specific knowledge lives in a committed .hive/ profile so the same flow runs in any repo.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Trevor Mathiak"
   },
