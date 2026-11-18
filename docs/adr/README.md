@@ -19,6 +19,7 @@ design, distilled from the wayfinding effort that produced the plugin.
 | [0012](0012-fleet-durability.md) | Fleet durability: stay in-session; the detached fleet stays an unbuilt additive seam |
 | [0013](0013-eval-harness.md) | Self-test harness: a static invariant check plus a `claude plugin eval` suite, both in CI |
 | [0014](0014-ticket-aware-integration-branch.md) | Ticket-aware integration branches; a ticketed run builds onto an existing branch |
+| [0015](0015-repo-hardening.md) | Repo hardening: squash-only, a ruleset-guarded `main`, SHA-pinned CI, evals off PRs |
 
 New decisions get the next sequential number. Superseding or refining an earlier
 one: note it in a `Status:` line and cross-link (see 0011 → 0005). The glossary

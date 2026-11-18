@@ -55,6 +55,10 @@ gate — the invariant job is the active gate).
 See `evals/README.md` (the suite + the regression demo), `scripts/check-invariants.sh`,
 `.github/workflows/evals.yml`, and the lifecycle these check in `reference/lifecycle.md`.
 
+**Update (2026-11-18, ADR-0015):** the behavioral suite no longer runs on PRs — only
+on pushes to `main` and manual dispatch — so PR-supplied scaffold code never runs
+with the API key. The invariant check still gates every PR.
+
 **Update (2026-11-18):** `claude plugin eval` is no longer early-access gated — it
 runs on a normal credential in Claude Code 2.1.x with no enablement env var, so the
 behavioral suite is now executable and was run green. That first real run also
